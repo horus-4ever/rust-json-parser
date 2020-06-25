@@ -46,7 +46,18 @@ impl<'a> Lexer<'a> {
         let mut result = String::new();
         self.advance()?;
         while self.current != '"' {
-            result.push(self.current);
+            if self.current == '\\' {
+                match self.iter.peek()? {
+                    'n' => { result.push('\n') }
+                    't' => { result.push('\t') }
+                    '"' => { result.push('"') }
+                    '\\' => {result.push('\\')}
+                    _ => return None
+                }
+                self.advance()?;
+            } else {
+                result.push(self.current);
+            }
             self.advance()?;
         }
         Some(result)
