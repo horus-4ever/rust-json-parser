@@ -2,7 +2,7 @@ use std::fmt::{Debug};
 pub use std::convert::{TryFrom};
 use std::cmp::{PartialEq};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Token {
     pub kind: TokenKind
 }
