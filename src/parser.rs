@@ -17,7 +17,11 @@ impl Parser {
 
     fn advance(&mut self) -> Option<()> {
         self.current = self.tokens.next()?;
-        // println!("NEXT {:?}", self.current);
+        Some(())
+    }
+
+    fn skip(&mut self, n: usize) -> Option<()> {
+        for _ in 0..n { self.advance()? }
         Some(())
     }
 
@@ -45,10 +49,20 @@ impl Parser {
         while self.current.kind != TokenKind::Syntax(SyntaxKind::RBracket) {
             let entry = self.dict_entry()?;
             result.insert(entry.0, entry.1);
-            self.eat(TokenKind::Syntax(SyntaxKind::Comma))?;
-            println!("CURRENT {:?}", self.current);
-            // println!("{:?}", result);
-            self.advance()?;
+            self.advance();
+            if self.current.kind == TokenKind::Syntax(SyntaxKind::RBracket) {
+                break
+            }
+            else if self.current.kind == TokenKind::Syntax(SyntaxKind::Comma) 
+                    && self.tokens.peek()?.kind == TokenKind::Syntax(SyntaxKind::RBracket)
+            {
+                self.skip(1);
+                break
+            }
+            else
+            {
+                self.eat(TokenKind::Syntax(SyntaxKind::Comma))?;
+            }
         }
         Some(result)
     }
@@ -58,8 +72,20 @@ impl Parser {
         self.advance()?;
         while self.current.kind != TokenKind::Syntax(SyntaxKind::RSBracket) {
             result.push(self.anything()?);
-            self.eat(TokenKind::Syntax(SyntaxKind::Comma));
-            self.advance();
+            self.advance()?;
+            if self.current.kind == TokenKind::Syntax(SyntaxKind::RSBracket) {
+                break
+            }
+            else if self.current.kind == TokenKind::Syntax(SyntaxKind::Comma) 
+                    && self.tokens.peek()?.kind == TokenKind::Syntax(SyntaxKind::RSBracket)
+            {
+                self.skip(1);
+                break
+            } 
+            else
+            {
+                self.eat(TokenKind::Syntax(SyntaxKind::Comma));
+            }
         }
         Some(result)
     }
@@ -84,7 +110,7 @@ impl Parser {
             Token { kind: TokenKind::Type(TypeKind::Null) } => Some(
                 JSONSyntax::Null
             ),
-            n => { println!("OHOHO : {:?}", n); None }
+            _ => None
         }
     }
 
